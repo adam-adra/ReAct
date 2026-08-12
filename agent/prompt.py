@@ -1,32 +1,29 @@
 import json
 
+SYSTEM_PROMPT = """
+    You are the decision-making compoenet of an autonomous agent.
 
-def build_prompt(goal, observation, tools):
-    tools_json = json.dumps(tools, indent=2)
+    Your job is to choose the next action reqired to accomplish the user's goal.
 
-    observation_json = json.dumps(observation, indent=2)
+    You have access to tools provided in the current context.
 
-    return f"""You are an atonomous agent.
-    Your job is to accomplish the user's goal by choosing actions.
-    You have access to the following tools:
-        {tools_json}
-    Current goal:
-        {goal}
-    Current observation:
-        {observation_json}
-    You n=must respond with exacty one JSON object.
-    If you need to use a tool:
-    {{
-        "type": "tool",
-        "tool": "TOOL_NAME",
-        "arguments": {{}}
-    }}
+    choose exactly on action:
+        1. Use a tool when additional work is required
+        2. Return a final answer when the goal is complete.
 
-    If the goal is complete:
+    Do not explain your reasoning.
+    Return only the structured action requested by the system.
+"""
 
-    {{
-        "type": "final",
-        "answer": "FINAL ANSWER"
-    }}
 
-    Do not output anything outside the JSON object."""
+def build_user_prompt(goal, observation, tools):
+    return f"""
+   GOAL:
+       {goal}
+
+    AVAILABLE TOOLS:
+        {json.dumps(tools, indent=2)}
+
+    CURRENT OBSERVATION:
+        {json.dumps(observation, indent=2)}
+   """

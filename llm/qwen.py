@@ -11,6 +11,14 @@ class Qwen:
             verbose=False,
         )
 
-    def generate(self, prompt: str) -> str:
-        response = self.llm(prompt, max_tokens=256, temperature=0)
-        return response["choices"][0]["text"]
+    def generate(self, system_prompt: str, user_prompt: str, schema: dict) -> str:
+        response = self.llm.create_chat_completion(
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            response_format={"type": "json_object", "schema": schema},
+            temperature=0.0,
+            max_tokens=256,
+        )
+        return response["choices"][0]["message"]["content"]
