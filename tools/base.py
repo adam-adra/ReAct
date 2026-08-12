@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Any
 
 
 class Tool(ABC):
@@ -17,8 +18,13 @@ class Tool(ABC):
     def parameters(self) -> dict:
         pass
 
+    @property
     @abstractmethod
-    def execute(self):
+    def argument_model(self) -> Any:
+        pass
+
+    @abstractmethod
+    def execute(self, **kwargs: Any) -> Any:
         pass
 
     def schema(self) -> dict:

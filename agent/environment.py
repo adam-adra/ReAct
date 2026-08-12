@@ -1,4 +1,5 @@
 from tools.registry import ToolRegistry
+from tools.task import TaskManager
 
 
 class Environment:
@@ -14,6 +15,8 @@ class Environment:
             tool = self.registry.get(tool_name)
             result = tool.execute(**arguments)
             self.state["last_result"] = result
+            if tool_name == "task_manager":
+                self.state["task_completed"] = True
             return {"status": "success", "result": result}
         except Exception as e:
             return {"status": "error", "message": str(e)}

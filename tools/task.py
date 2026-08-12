@@ -1,4 +1,7 @@
+from typing import Any
+
 from tools.base import Tool
+from tools.models import TaskManagerArguments
 
 
 class TaskManager(Tool):
@@ -23,5 +26,10 @@ class TaskManager(Tool):
             "required": ["completed"],
         }
 
-    def execute(self, completed: bool):
-        return completed
+    @property
+    def argument_model(self) -> Any:
+        return TaskManagerArguments
+
+    def execute(self, **kwargs: Any):
+        validated = TaskManagerArguments(completed=kwargs["completed"])
+        return validated.completed

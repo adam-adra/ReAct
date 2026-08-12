@@ -1,4 +1,7 @@
+from typing import Any
+
 from tools.base import Tool
+from tools.models import CalculatorArguments
 
 
 class Calculator(Tool):
@@ -21,5 +24,10 @@ class Calculator(Tool):
             "required": ["a", "b"],
         }
 
-    def execute(self, a: float, b: float) -> float:
-        return a * b
+    @property
+    def argument_model(self):
+        return CalculatorArguments
+
+    def execute(self, **kwargs: Any) -> float:
+        validated = self.argument_model(**kwargs)
+        return validated.a * validated.b
