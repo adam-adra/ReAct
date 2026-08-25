@@ -1,7 +1,8 @@
 import json
 
+from agent import action
 from agent.action import FinalAction, ToolAction
-from agent.action_schema import ACTION_SCHEMA
+from agent.action_schema import build_action_schema
 from agent.decision import DecisionMaker
 from agent.prompt import SYSTEM_PROMPT, build_user_prompt
 
@@ -13,8 +14,9 @@ class QwenDecisionMaker(DecisionMaker):
     def decide(self, goal, observation, tools):
         user_prompt = build_user_prompt(goal, observation, tools)
 
+        action_schema = build_action_schema(tools)
         response = self.model.generate(
-            system_prompt=SYSTEM_PROMPT, user_prompt=user_prompt, schema=ACTION_SCHEMA
+            system_prompt=SYSTEM_PROMPT, user_prompt=user_prompt, schema=action_schema
         )
         data = json.loads(response)
 
