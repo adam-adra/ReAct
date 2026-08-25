@@ -1,21 +1,30 @@
 from agent.action import FinalAction, ToolAction
 
-ACTION_SCHEMA = {
-    "type": "object",
-    "oneOf": [
-        {
-            "properties": {
-                "type": {"const": "tool"},
-                "tool": {"type": "string"},
-                "arguments": {"type": "object"},
-            },
-            "required": ["type", "tool", "arguments"],
-            "additionalProperties": False,
-        },
-        {
-            "properties": {"type": {"const": "final"}, "answer": {"type": "string"}},
-            "required": ["type", "answer"],
-            "additionalProperties": False,
-        },
-    ],
-}
+
+def build_action_schema(tools: list[dict]) -> dict:
+    tool_branches = []
+    for tool in tools:
+        tool_branches.append(
+            {
+                "type": "object",
+                "properties": {
+                    "type": {"const": "tool"},
+                    "tool": {"const": tool["name"]},
+                    "arguments": tool["parameters"],
+                },
+                "required": ["type", "tool", "arguments"],
+                "additionalProperties": False,
+            }
+        )
+        tool_branches.append(
+            {
+                "type": "object",
+                "properties": {
+                    "type": {"const": "final"},
+                    "answer": {"type": "string"},
+                },
+                "required": ["type", "answer"],
+                "additionalProperties": False,
+            }
+        )
+    return {"oneOf": tool_branches}

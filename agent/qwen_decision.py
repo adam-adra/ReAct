@@ -16,7 +16,6 @@ class QwenDecisionMaker(DecisionMaker):
         response = self.model.generate(
             system_prompt=SYSTEM_PROMPT, user_prompt=user_prompt, schema=ACTION_SCHEMA
         )
-        print(response)
         data = json.loads(response)
 
         if data["type"] == "tool":
