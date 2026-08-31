@@ -1,4 +1,4 @@
-from agent.action import FinalAction, ToolAction
+from agent.action import FinalAction
 
 
 class Agent:
@@ -25,5 +25,5 @@ class Agent:
 
         return {
             "status": "error",
-            "message": f"Agent exceeded maximum allowed steps ({max_steps}) without completing.",
+            "message": f"Agent exceeded maximum allowed steps ({max_steps}).",
         }

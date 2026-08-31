@@ -1,3 +1,4 @@
+from typing import cast
 from llama_cpp import Llama
 
 
@@ -19,4 +20,7 @@ class Qwen:
             temperature=0.0,
             max_tokens=256,
         )
-        return response["choices"][0]["message"]["content"]
+        if isinstance(response, dict):
+            content = response["choices"][0]["message"].get("content")
+            return cast(str, content or "")
+        return ""

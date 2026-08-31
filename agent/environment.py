@@ -1,5 +1,4 @@
 from tools.registry import ToolRegistry
-from tools.task import TaskManager
 
 
 class Environment:

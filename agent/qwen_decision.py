@@ -1,6 +1,5 @@
 import json
 
-from agent import action
 from agent.action import FinalAction, ToolAction
 from agent.action_schema import build_action_schema
 from agent.decision import DecisionMaker
@@ -16,7 +15,9 @@ class QwenDecisionMaker(DecisionMaker):
 
         action_schema = build_action_schema(tools)
         response = self.model.generate(
-            system_prompt=SYSTEM_PROMPT, user_prompt=user_prompt, schema=action_schema
+            system_prompt=SYSTEM_PROMPT,
+            user_prompt=user_prompt,
+            schema=action_schema,
         )
         data = json.loads(response)
 
@@ -25,4 +26,4 @@ class QwenDecisionMaker(DecisionMaker):
         if data["type"] == "final":
             return FinalAction(**data)
 
-        raise ValueError(f"Unkown action type: {data['type']}")
+        raise ValueError(f"Unknown action type: {data['type']}")

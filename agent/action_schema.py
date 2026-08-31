@@ -1,6 +1,3 @@
-from agent.action import FinalAction, ToolAction
-
-
 def build_action_schema(tools: list[dict]) -> dict:
     tool_branches = []
     for tool in tools:
@@ -16,6 +13,8 @@ def build_action_schema(tools: list[dict]) -> dict:
                 "additionalProperties": False,
             }
         )
+
+    # Append FinalAction once outside the loop
     tool_branches.append(
         {
             "type": "object",
