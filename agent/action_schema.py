@@ -16,15 +16,15 @@ def build_action_schema(tools: list[dict]) -> dict:
                 "additionalProperties": False,
             }
         )
-        tool_branches.append(
-            {
-                "type": "object",
-                "properties": {
-                    "type": {"const": "final"},
-                    "answer": {"type": "string"},
-                },
-                "required": ["type", "answer"],
-                "additionalProperties": False,
-            }
-        )
+    tool_branches.append(
+        {
+            "type": "object",
+            "properties": {
+                "type": {"const": "final"},
+                "answer": {"type": "string"},
+            },
+            "required": ["type", "answer"],
+            "additionalProperties": False,
+        }
+    )
     return {"oneOf": tool_branches}

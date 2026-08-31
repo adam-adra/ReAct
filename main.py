@@ -20,7 +20,7 @@ decision_maker = QwenDecisionMaker(model)
 
 agent = Agent(environment=environment, decision_maker=decision_maker)
 
-result = agent.run("what is 7 * 7")
+result = agent.run("what is 8 and 7 ")
 
 print("\nFINAL RESULT:")
 print(result.get("answer"))

@@ -1,5 +1,3 @@
-from tabnanny import verbose
-
 from llama_cpp import Llama
 
 
@@ -7,7 +5,7 @@ class Qwen:
     def __init__(self, model_path: str):
         self.llm = Llama(
             model_path=model_path,
-            m_ctx=4096,  # what is this
+            n_ctx=4096,
             verbose=False,
         )
 

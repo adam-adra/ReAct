@@ -1,29 +1,25 @@
 import json
 
-SYSTEM_PROMPT = """
-    You are the decision-making compoenet of an autonomous agent.
+SYSTEM_PROMPT = """You are the decision-making component of an autonomous AI agent.
+Your job is to choose the next action to accomplish the user's goal.
 
-    Your job is to choose the next action reqired to accomplish the user's goal.
-
-    You have access to tools provided in the current context.
-
-    choose exactly on action:
-        1. Use a tool when additional work is required
-        2. Return a final answer when the goal is complete.
-
-    Do not explain your reasoning.
-    Return only the structured action requested by the system.
+Rules:
+1. If the CURRENT OBSERVATION already contains the result or information needed to answer the goal, return a "final" action with the answer.
+2. If you need to perform a calculation or action to answer the goal, choose the appropriate tool.
+3. Do not call a tool repeatedly if the result is already in the observation.
+4. Return only the structured JSON action requested.
 """
 
 
 def build_user_prompt(goal, observation, tools):
-    return f"""
-   GOAL:
-       {goal}
+    return f"""GOAL:
+{goal}
 
-    AVAILABLE TOOLS:
-        {json.dumps(tools, indent=2)}
+AVAILABLE TOOLS:
+{json.dumps(tools, indent=2)}
 
-    CURRENT OBSERVATION:
-        {json.dumps(observation, indent=2)}
-   """
+CURRENT OBSERVATION:
+{json.dumps(observation, indent=2)}
+
+DECISION INSTRUCTION:
+Review the CURRENT OBSERVATION. If it already contains the calculation or result to satisfy the GOAL, return type "final" with the answer string. Otherwise, invoke the required tool."""
