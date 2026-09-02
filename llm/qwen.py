@@ -18,7 +18,8 @@ class Qwen:
             ],
             response_format={"type": "json_object", "schema": schema},
             temperature=0.0,
-            max_tokens=256,
+            repeat_penalty=1.15,
+            max_tokens=1024,
         )
         if isinstance(response, dict):
             content = response["choices"][0]["message"].get("content")

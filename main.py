@@ -10,6 +10,7 @@ from agent.qwen_decision import QwenDecisionMaker
 from llm.qwen import Qwen
 from tools.calculator import Calculator
 from tools.file_creation import CreateFile
+from tools.file_reading import ReadFile
 from tools.registry import ToolRegistry
 from tools.task import TaskManager
 
@@ -32,6 +33,7 @@ def main():
         registry.register(Calculator())
         registry.register(TaskManager())
         registry.register(CreateFile())
+        registry.register(ReadFile())
         environment = Environment(registry)
         decision_maker = QwenDecisionMaker(model)
         agent = Agent(environment=environment, decision_maker=decision_maker)

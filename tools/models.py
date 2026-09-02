@@ -13,3 +13,7 @@ class TaskManagerArguments(BaseModel):
 class CreateFileArguments(BaseModel):
     file: str
     content: str
+
+
+class ReadFileArguments(BaseModel):
+    file: str

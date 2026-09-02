@@ -5,11 +5,17 @@ def build_action_schema(tools: list[dict]) -> dict:
             {
                 "type": "object",
                 "properties": {
+                    "thought": {
+                        "type": "string",
+                        "description": (
+                            "Brief 1-2 sentence explanation of the next immediate step."
+                        ),
+                    },
                     "type": {"const": "tool"},
                     "tool": {"const": tool["name"]},
                     "arguments": tool["parameters"],
                 },
-                "required": ["type", "tool", "arguments"],
+                "required": ["type", "tool", "arguments", "thought"],
                 "additionalProperties": False,
             }
         )
@@ -19,10 +25,16 @@ def build_action_schema(tools: list[dict]) -> dict:
         {
             "type": "object",
             "properties": {
+                "thought": {
+                    "type": "string",
+                    "description": (
+                        "Brief 1-2 sentence explanation of the next immediate step."
+                    ),
+                },
                 "type": {"const": "final"},
                 "answer": {"type": "string"},
             },
-            "required": ["type", "answer"],
+            "required": ["type", "answer", "thought"],
             "additionalProperties": False,
         }
     )

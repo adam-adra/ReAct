@@ -10,6 +10,9 @@ RULES:
    you MUST select type="final" and summarize the completed answer.
 3. NEVER call the same tool repeatedly if it has already succeeded!
 4. NEVER write tool calls or fake code inside the "final" answer.
+5. In the "final" answer, provide a concise summary or key highlights;
+   do NOT copy entire files verbatim.
+6. The "thought" MUST be 1 or 2 concise sentences only. Do NOT repeat yourself.
 """
 
 
