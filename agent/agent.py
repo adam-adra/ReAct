@@ -8,10 +8,11 @@ class Agent:
 
     def run(self, goal: str, max_steps: int = 10):
         observation = self.environment.observe()
+        history: list[str] = []
 
         for step in range(max_steps):
             action = self.decision_maker.decide(
-                goal, observation, self.environment.get_tool_schemas()
+                goal, observation, self.environment.get_tool_schemas(), history=history
             )
             print(f"\nACTION (Step {step + 1}):")
             print(action)
@@ -22,6 +23,11 @@ class Agent:
             observation = self.environment.execute(action.model_dump())
             print("\nOBSERVATION:")
             print(observation)
+
+            res = observation.get("result", observation.get("message", "done"))
+            history.append(
+                f"Step {step + 1}: Called {action.tool}({action.arguments}) -> Result: {res}"
+            )
 
         return {
             "status": "error",

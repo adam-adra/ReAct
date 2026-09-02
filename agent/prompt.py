@@ -1,28 +1,47 @@
 import json
+from typing import Optional
 
-SYSTEM_PROMPT = """You are the decision-making component of an autonomous AI agent.
-Your job is to choose the next action to accomplish the user's goal.
+SYSTEM_PROMPT = """You are the decision-making engine of an autonomous AI agent.
+Your job is to choose the next JSON action to accomplish the user goal.
 
-Rules:
-1. If the CURRENT OBSERVATION already contains the result needed for the goal,
-   return a "final" action with the answer string.
-2. If you need to perform a calculation or action, choose the appropriate tool.
-3. Do not call a tool repeatedly if the result is already in the observation.
-4. Return only the structured JSON action requested.
+RULES:
+1. If the goal requires an action and it has not been completed yet, you MUST select type="tool".
+2. If EXECUTION HISTORY shows the required action has already been performed successfully,
+   you MUST select type="final" and summarize the completed answer.
+3. NEVER call the same tool repeatedly if it has already succeeded!
+4. NEVER write tool calls or fake code inside the "final" answer.
 """
 
 
-def build_user_prompt(goal, observation, tools):
-    return f"""GOAL:
-{goal}
+def build_user_prompt(
+    goal: str,
+    observation: dict,
+    tools: list[dict],
+    history: Optional[list[str]] = None,
+) -> str:
+    tool_lines = [f"- {t['name']}: {t.get('description', '')}" for t in tools]
+    tool_list = "\n".join(tool_lines)
+
+    history_block = ""
+    if history:
+        history_lines = "\n".join(f"- {h}" for h in history)
+        history_block = f"\nEXECUTION HISTORY:\n{history_lines}\n"
+
+    decision_instruction = (
+        "Review EXECUTION HISTORY. The action has already been executed successfully. "
+        "Return type='final' with the final answer now."
+        if history
+        else "If the action has not been done yet, call the appropriate tool."
+    )
+
+    return f"""GOAL: {goal}
 
 AVAILABLE TOOLS:
-{json.dumps(tools, indent=2)}
-
+{tool_list}
+{history_block}
 CURRENT OBSERVATION:
-{json.dumps(observation, indent=2)}
+{json.dumps(observation)}
 
-DECISION INSTRUCTION:
-Review the CURRENT OBSERVATION. If it already contains the calculation or result
-to satisfy the GOAL, return type "final" with the answer string.
-Otherwise, invoke the required tool."""
+DECISION:
+{decision_instruction}
+Action:"""

@@ -8,3 +8,8 @@ class CalculatorArguments(BaseModel):
 
 class TaskManagerArguments(BaseModel):
     completed: bool
+
+
+class CreateFileArguments(BaseModel):
+    file: str
+    content: str

@@ -10,8 +10,8 @@ class QwenDecisionMaker(DecisionMaker):
     def __init__(self, model) -> None:
         self.model = model
 
-    def decide(self, goal, observation, tools):
-        user_prompt = build_user_prompt(goal, observation, tools)
+    def decide(self, goal, observation, tools, history=None):
+        user_prompt = build_user_prompt(goal, observation, tools, history=history)
 
         action_schema = build_action_schema(tools)
         response = self.model.generate(

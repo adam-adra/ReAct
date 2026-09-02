@@ -1,3 +1,5 @@
+import _bootstrap  # noqa: F401
+
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
@@ -7,6 +9,7 @@ from agent.environment import Environment
 from agent.qwen_decision import QwenDecisionMaker
 from llm.qwen import Qwen
 from tools.calculator import Calculator
+from tools.file_creation import CreateFile
 from tools.registry import ToolRegistry
 from tools.task import TaskManager
 
@@ -28,6 +31,7 @@ def main():
         registry = ToolRegistry()
         registry.register(Calculator())
         registry.register(TaskManager())
+        registry.register(CreateFile())
         environment = Environment(registry)
         decision_maker = QwenDecisionMaker(model)
         agent = Agent(environment=environment, decision_maker=decision_maker)
