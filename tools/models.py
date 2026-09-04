@@ -1,6 +1,10 @@
 from pydantic import BaseModel
 
 
+class BashArguments(BaseModel):
+    command: str
+
+
 class CalculatorArguments(BaseModel):
     a: float
     b: float

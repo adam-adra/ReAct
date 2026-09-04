@@ -7,7 +7,7 @@ Your job is to choose the next JSON action to accomplish the user goal.
 RULES:
 1. If the goal requires an action and it has not been completed yet, you MUST select type="tool".
 2. If EXECUTION HISTORY shows the required action has already been performed successfully,
-   you MUST select type="final" and summarize the completed answer.
+   you MUST select type="final" and answer the goal using the gathered results.
 3. NEVER call the same tool repeatedly if it has already succeeded!
 4. NEVER write tool calls or fake code inside the "final" answer.
 5. In the "final" answer, provide a concise summary or key highlights;
