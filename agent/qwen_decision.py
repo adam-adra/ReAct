@@ -19,7 +19,6 @@ class QwenDecisionMaker(DecisionMaker):
             user_prompt=user_prompt,
             schema=action_schema,
         )
-        print(response)
         try:
             data = json.loads(response)
         except json.JSONDecodeError:
@@ -28,12 +27,15 @@ class QwenDecisionMaker(DecisionMaker):
                 if prefix.startswith('"'):
                     prefix = prefix[1:]
                 clean_answer = prefix.rstrip('"').rstrip("}").strip()
-                data = {"type": "final", "answer": clean_answer}
+                data = {
+                    "type": "final",
+                    "answer": clean_answer,
+                    "thought": "Completed the task.",
+                }
             else:
                 raise
 
         if data["type"] == "tool":
-            print(data)
             return ToolAction(**data)
         if data["type"] == "final":
             return FinalAction(**data)

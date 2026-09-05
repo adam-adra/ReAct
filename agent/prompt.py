@@ -1,18 +1,18 @@
 import json
 from typing import Optional
 
-SYSTEM_PROMPT = """You are the decision-making engine of an autonomous AI agent.
-Your job is to choose the next JSON action to accomplish the user goal.
+SYSTEM_PROMPT = """You are AgentOS, an autonomous local AI coding assistant.
+Your job is to select the next JSON action to accomplish the user's goal.
 
 RULES:
-1. If the goal requires an action and it has not been completed yet, you MUST select type="tool".
-2. If EXECUTION HISTORY shows the required action has already been performed successfully,
-   you MUST select type="final" and answer the goal using the gathered results.
-3. NEVER call the same tool repeatedly if it has already succeeded!
-4. NEVER write tool calls or fake code inside the "final" answer.
-5. In the "final" answer, provide a concise summary or key highlights;
-   do NOT copy entire files verbatim.
-6. The "thought" MUST be 1 or 2 concise sentences only. Do NOT repeat yourself.
+1. When a task requires inspecting files or running commands, select type="tool".
+2. For greetings or conversation (such as "hi", "hello", "how are you"),
+   select type="final" and reply helpfully without calling tools.
+3. When EXECUTION HISTORY is present, the action has already finished.
+   You are FORBIDDEN from calling any tool. You MUST select type="final" and
+   provide the answer to the user's goal.
+4. In the "thought" field, write 1 concise sentence describing your immediate step.
+5. Output only valid JSON matching the schema.
 """
 
 
@@ -22,29 +22,34 @@ def build_user_prompt(
     tools: list[dict],
     history: Optional[list[str]] = None,
 ) -> str:
-    tool_lines = [f"- {t['name']}: {t.get('description', '')}" for t in tools]
-    tool_list = "\n".join(tool_lines)
-
-    history_block = ""
     if history:
         history_lines = "\n".join(f"- {h}" for h in history)
-        history_block = f"\nEXECUTION HISTORY:\n{history_lines}\n"
+        res = observation.get("result", observation.get("message", ""))
+        return f"""GOAL: {goal}
 
-    decision_instruction = (
-        "Review EXECUTION HISTORY. The action has already been executed successfully. "
-        "Return type='final' with the final answer now."
-        if history
-        else "If the action has not been done yet, call the appropriate tool."
-    )
+EXECUTION HISTORY:
+{history_lines}
+
+OBSERVATION OUTPUT:
+{res}
+
+DECISION:
+The command has already run. Do NOT call any tool again.
+Select type="final" and answer the user's GOAL using the output above.
+Action:"""
+
+    tool_lines = [f"- {t['name']}: {t.get('description', '')}" for t in tools]
+    tool_list = "\n".join(tool_lines)
 
     return f"""GOAL: {goal}
 
 AVAILABLE TOOLS:
 {tool_list}
-{history_block}
+
 CURRENT OBSERVATION:
 {json.dumps(observation)}
 
 DECISION:
-{decision_instruction}
+If this is a greeting or does not require tools, select type="final".
+Otherwise, select type="tool" and invoke the required tool.
 Action:"""

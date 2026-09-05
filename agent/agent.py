@@ -1,4 +1,5 @@
 from agent.action import FinalAction
+from agent.ui import AgentUI
 
 
 class Agent:
@@ -11,25 +12,37 @@ class Agent:
         history: list[str] = []
 
         for step in range(max_steps):
+            step_num = step + 1
+
             action = self.decision_maker.decide(
                 goal, observation, self.environment.get_tool_schemas(), history=history
             )
-            print(f"\nACTION (Step {step + 1}):")
-            print(action)
+
+            if hasattr(action, "thought") and action.thought:
+                AgentUI.thought(action.thought)
 
             if isinstance(action, FinalAction):
-                return {"status": "completed", "answer": action.answer}
+                AgentUI.final_answer(action.answer)
+                return {
+                    "status": "completed",
+                    "answer": action.answer,
+                    "thought": action.thought,
+                    "steps": step_num,
+                }
+
+            AgentUI.tool_call(action.tool, action.arguments)
 
             observation = self.environment.execute(action.model_dump())
-            print("\nOBSERVATION:")
-            print(observation)
+            AgentUI.observation(observation)
 
             res = observation.get("result", observation.get("message", "done"))
             history.append(
-                f"Step {step + 1}: Called {action.tool}({action.arguments}) -> Result: {res}"
+                f"Step {step_num}: Called {action.tool}({action.arguments}) -> Result: {res}"
             )
 
+        err_msg = f"Agent exceeded maximum allowed steps ({max_steps})."
+        AgentUI.error(err_msg)
         return {
             "status": "error",
-            "message": f"Agent exceeded maximum allowed steps ({max_steps}).",
+            "message": err_msg,
         }
