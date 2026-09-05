@@ -1,24 +1,24 @@
-# AgentOS: A From-Scratch Modular Agent Runtime
+# ReAct: A From-Scratch Modular Runtime for Reasoning and Acting
 
-AgentOS is a modular, local-first runtime and execution harness designed to operate autonomous AI agents using quantized local models (such as Qwen 2.5 / Qwen 3 0.5B-0.6B GGUF) via llama.cpp.
+ReAct is a modular, local-first runtime and execution harness designed to operate autonomous AI agents using quantized local models (such as Qwen 2.5 / Qwen 3 0.5B-0.6B GGUF) via llama.cpp.
 
-The project is built around a foundational architectural principle:
+The project implements the foundational **ReAct** (*Reasoning + Acting*) paradigm, structured around a core architectural principle:
 
 $$\text{Agent} = \text{Model} + \text{Harness}$$
 
-The Large Language Model is not the agent. The model functions as a stateless reasoning policy, while the runtime harness provides state management, event-sourced flight recording, grammar-constrained decoding, sandboxed execution, exception containment, and working directory confinement.
+The Large Language Model is not the agent. The model functions as a stateless reasoning policy, while the ReAct runtime harness provides state management, event-sourced flight recording, grammar-constrained decoding, sandboxed execution, exception containment, and working directory confinement.
 
 ---
 
 ## 1. System Architecture
 
-The runtime implements a strict Sense-Decide-Act control loop decoupled from model backends and operating system primitives.
+The runtime implements an interleaved Thought-Action-Observation loop decoupled from model backends and operating system primitives.
 
 ```mermaid
 graph TD
-    User([User Input / Goal]) --> Loop[Agent Execution Loop]
+    User([User Input / Goal]) --> Loop[ReAct Execution Loop]
 
-    subgraph Runtime Harness [AgentOS Runtime Harness]
+    subgraph Runtime Harness [ReAct Runtime Harness]
         Loop --> Sense[1. Sense: Gather Environment Observation]
         Sense --> Context[2. Assemble Prompt & Turn Trajectory]
         Context --> Decide[3. Query Decision Policy Adapter]
@@ -46,13 +46,28 @@ graph TD
 
 ## 2. Core Architectural Pillars
 
-### 2.1 Grammar-Constrained Decoding
+### 2.1 The ReAct Paradigm (Reasoning + Acting)
+Decisions are modeled as discriminated sum types with mandatory reasoning buffers:
+```json
+{
+  "thought": "The user wants to create a file named notes.txt. I need to use the 'create_file' tool.",
+  "type": "tool",
+  "tool": "create_file",
+  "arguments": {
+    "file": "notes.txt",
+    "content": "ReAct runtime initialized."
+  }
+}
+```
+Enforcing explicit `thought` generation before structural argument decoding improves tool selection accuracy and eliminates multi-step execution loops on small language models.
+
+### 2.2 Grammar-Constrained Decoding
 Traditional agent frameworks prompt models to return raw JSON and rely on regular expressions with retry loops. On small edge models (0.5B to 3B parameters), this approach yields a 20% to 30% syntax failure rate due to markdown ticks, conversational chatter, and structural deviations.
 
-AgentOS compiles dynamic JSON Schemas derived from registered tools into GBNF (Generalized Backus-Naur Form) grammars via `llama-cpp-python`. Non-compliant tokens are masked at the sampler level with a logit bias of $-\infty$. The syntax failure rate is mathematically zero.
+ReAct compiles dynamic JSON Schemas derived from registered tools into GBNF (Generalized Backus-Naur Form) grammars via `llama-cpp-python`. Non-compliant tokens are masked at the sampler level with a logit bias of $-\infty$. The syntax failure rate is mathematically zero.
 
-### 2.2 Event-Sourced Flight Recorder & Session Persistence
-All interactions within AgentOS are modeled as strongly typed, immutable Pydantic events:
+### 2.3 Event-Sourced Flight Recorder & Session Persistence
+All interactions within ReAct are modeled as strongly typed, immutable Pydantic events:
 - `UserGoalEvent`: Captures user prompts and session initialization.
 - `ToolCallEvent`: Records structured tool selections, thoughts, and arguments.
 - `ObservationEvent`: Captures environment return values, exit codes, and errors.
@@ -65,7 +80,7 @@ sequenceDiagram
     autonumber
     actor User
     participant TUI as Textual TUI
-    participant Agent as Agent Loop
+    participant Agent as ReAct Loop
     participant Policy as Qwen Decision Policy
     participant Sandbox as Local Sandbox
     participant Session as Session Flight Recorder
@@ -90,30 +105,19 @@ sequenceDiagram
     end
 ```
 
-### 2.3 Safe Environment Sandbox & Working Directory Confinement
+### 2.4 Safe Environment Sandbox & Working Directory Confinement
 The runtime confines execution to designated project boundaries without requiring heavy virtualization containers:
 - **Command Security Guard**: Scans commands against destructive patterns (`rm -rf /`, fork bombs, raw disk writes, formatting commands) before subshell execution.
 - **Working Directory Tracking**: Standard `subprocess.run` calls spawn isolated subshells that lose directory changes. The `LocalSandbox` probes directory state via trailing environment markers, persisting `cd` operations across agent turns.
 - **Path Confinement**: Prevents relative path escapes (`cd ../../..`) by validating all target paths against `Path.is_relative_to(root_dir)`.
-
-### 2.4 Tagged Union Action Schemas & Reasoning Buffers
-Decisions are modeled as discriminated sum types:
-```json
-{
-  "thought": "Brief 1-2 sentence explanation of the immediate step.",
-  "type": "tool",
-  "tool": "execute_bash",
-  "arguments": { "command": "cat README.md" }
-}
-```
-Enforcing explicit `thought` generation before structural argument decoding improves tool selection accuracy and eliminates multi-step execution loops on small language models.
+- **Smart Path Normalization**: Automatically normalizes leading slashes and placeholder path patterns to local workspace targets.
 
 ---
 
 ## 3. Codebase Layout
 
 ```
-AgentOS/
+ReAct/
 ├── agent/
 │   ├── action.py          # Discriminated union schemas (ToolAction, FinalAction)
 │   ├── action_schema.py   # Dynamic oneOf JSON Schema compiler for tool registry
@@ -124,7 +128,7 @@ AgentOS/
 │   ├── prompt.py          # Context assembly and positive task-fulfillment prompting
 │   ├── qwen_decision.py   # Concrete decision policy using local GGUF weights
 │   ├── session.py         # Append-only flight recorder with disk serialization
-│   └── ui.py              # Zero-emoji output formatting with Textual sink routing
+│   └── ui.py              # Output formatting with Textual sink routing
 ├── llm/
 │   ├── __init__.py
 │   └── qwen.py            # llama-cpp-python wrapper with greedy constrained sampling
@@ -148,7 +152,7 @@ AgentOS/
 
 ## 4. Verification and Developer Tooling
 
-AgentOS enforces strict type safety and linting across all source files.
+ReAct enforces strict type safety and linting across all source files.
 
 ```bash
 # Run Flake8 and Mypy checks
@@ -175,8 +179,8 @@ Success: no issues found in 25 source files
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/adam-adra/AgentOS.git
-cd AgentOS
+git clone https://github.com/adam-adra/AgentOS.git ReAct
+cd ReAct
 
 # 2. Synchronize dependencies
 uv sync
@@ -195,7 +199,7 @@ make run
 
 ## 6. Makefile Targets Reference
 
-- `make / make run`: Launches the interactive AgentOS Textual interface.
+- `make / make run`: Launches the interactive ReAct Textual interface.
 - `make download-model`: Downloads the quantized Qwen GGUF weights from HuggingFace.
 - `make force-download`: Purges existing weights and triggers a fresh download.
 - `make clean-pycache`: Purges `__pycache__`, `.mypy_cache`, and compiled `.pyc` files.

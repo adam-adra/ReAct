@@ -14,13 +14,40 @@ class LocalSandbox:
         self.cwd = self.root
         self.max_output_length = max_output_length
 
+    def _normalize_command_paths(self, command: str) -> str:
+        tokens = command.split()
+        modified = False
+        new_tokens = []
+        for tok in tokens:
+            if "/" in tok and not Path(tok).exists():
+                fname = Path(tok).name
+                if (self.cwd / fname).exists():
+                    tok = fname
+                    modified = True
+                elif (self.cwd / f"_{fname}").exists():
+                    tok = f"_{fname}"
+                    modified = True
+                else:
+                    rel = tok.lstrip("/")
+                    if (self.cwd / rel).exists():
+                        tok = rel
+                        modified = True
+            elif not tok.startswith("-") and not (self.cwd / tok).exists():
+                if (self.cwd / f"_{tok}").exists():
+                    tok = f"_{tok}"
+                    modified = True
+            new_tokens.append(tok)
+        return " ".join(new_tokens) if modified else command
+
     def execute(self, command: str, timeout: int = 15) -> tuple[int, str]:
-        script = f"{command}\npwd"
+        norm_command = self._normalize_command_paths(command)
+        script = f"{norm_command}\n__ret=$?\npwd\nexit $__ret"
 
         try:
             res = subprocess.run(
                 script,
                 shell=True,
+                executable="/bin/bash",
                 cwd=self.cwd,
                 capture_output=True,
                 text=True,

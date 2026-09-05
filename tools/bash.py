@@ -20,8 +20,8 @@ class ExecuteBash(Tool):
     @override
     def description(self) -> str:
         return (
-            "Execute a bash shell command (e.g. 'cat <file>' to view file contents, "
-            "'ls' to list files) and return its stdout, stderr, and exit code"
+            "Execute a bash shell command (e.g. 'cat filename.py' to view files, "
+            "'ls' to list files, 'python script.py' to run) and return output"
         )
 
     @property

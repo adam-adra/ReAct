@@ -14,11 +14,12 @@ from agent.qwen_decision import QwenDecisionMaker
 from agent.ui import set_output_sink
 from llm.qwen import Qwen
 from tools.bash import ExecuteBash
+from tools.file_creation import CreateFile
 from tools.registry import ToolRegistry
 from tools.sandbox import LocalSandbox
 
 
-class AgentOSApp(App[None]):
+class ReActApp(App[None]):
     CSS = """
     Screen {
         layout: vertical;
@@ -68,18 +69,18 @@ class AgentOSApp(App[None]):
         super().__init__()
         self.agent = agent
         self.environment = environment
-        self.model_basename = model_basename
+        self.model_basename = model_basename.removesuffix(".gguf")
         self.sandbox = sandbox
 
     def compose(self) -> ComposeResult:
         yield Static(
-            f"AgentOS | Model: {self.model_basename} | Tool: [execute_bash]",
+            f"ReAct | Model: {self.model_basename} | Tools: [execute_bash, create_file]",
             id="header-bar",
         )
         yield RichLog(id="chat-log", markup=True, wrap=True)
         with Container(id="input-container"):
             yield Input(
-                placeholder="AgentOS > Type your goal or command here... (or 'exit' to quit)",
+                placeholder="ReAct > Type your goal or command here... (or 'exit' to quit)",
                 id="user-input",
             )
 
@@ -91,11 +92,7 @@ class AgentOSApp(App[None]):
 
         set_output_sink(textual_sink)
 
-        log.write("[bold cyan]Welcome to AgentOS.[/bold cyan]")
-        log.write(
-            "[dim]The input prompt is anchored at the bottom. "
-            "All thoughts, commands, and answers stream into the center window.[/dim]\n"
-        )
+        log.write("[bold cyan]Welcome.[/bold cyan]\n")
         self.query_one("#user-input", Input).focus()
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
@@ -140,18 +137,22 @@ def main() -> None:
     model = Qwen(model_path)
     registry = ToolRegistry()
     registry.register(ExecuteBash(sandbox=sandbox))
+    registry.register(CreateFile(sandbox=sandbox))
 
     environment = Environment(registry)
     decision_maker = QwenDecisionMaker(model)
     agent = Agent(environment=environment, decision_maker=decision_maker)
 
-    app = AgentOSApp(
+    app = ReActApp(
         agent=agent,
         environment=environment,
         model_basename=os.path.basename(model_path),
         sandbox=sandbox,
     )
     app.run()
+
+
+AgentOSApp = ReActApp
 
 
 if __name__ == "__main__":
