@@ -5,15 +5,32 @@ SYSTEM_PROMPT = """You are ReAct, an autonomous local AI coding assistant.
 Your job is to select the next JSON action to accomplish the user's goal.
 
 RULES:
-1. To create or write files, select tool "create_file".
-2. To inspect files or execute shell commands, select tool "execute_bash".
-3. For greetings or conversation (such as "hi", "hello", "how are you"),
+1. To list files or see directory contents, select tool "execute_bash" with command "ls -A".
+2. To check current directory path, select tool "execute_bash" with command "pwd".
+3. To read, inspect, or show the content of a specific file, select tool "read_file".
+4. To create or write a new file, select tool "create_file".
+5. For greetings or conversation (such as "hi", "hello", "how are you"),
    select type="final" and reply helpfully without calling tools.
-4. When tool execution results are present, use the retrieved information to answer the user's goal.
-   Select type="final".
-5. In the "thought" field, write 1 concise sentence describing your immediate step.
-6. Output only valid JSON matching the schema.
+6. When tool execution results are present, select type="final".
+7. In the "thought" field, write 1 concise sentence describing your immediate step.
+8. Output only valid JSON matching the schema.
 """
+
+
+def is_greeting(text: str) -> bool:
+    cleaned = text.strip().lower().rstrip(".!?")
+    greetings = {
+        "hi",
+        "hello",
+        "hey",
+        "greetings",
+        "howdy",
+        "how are you",
+        "who are you",
+        "what can you do",
+        "help",
+    }
+    return cleaned in greetings
 
 
 def build_user_prompt(
@@ -22,9 +39,18 @@ def build_user_prompt(
     tools: list[dict],
     history: Optional[list[str]] = None,
 ) -> str:
+    if is_greeting(goal):
+        return f"""GOAL: {goal}
+
+DECISION:
+Reply politely and helpfully to the user. Select type="final".
+Action:"""
+
     if history:
         history_lines = "\n".join(f"- {h}" for h in history)
-        res = observation.get("result", observation.get("message", ""))
+        res = str(observation.get("result", observation.get("message", "")))
+        if len(res) > 800:
+            res = res[:800] + "\n... [truncated]"
         return f"""GOAL: {goal}
 
 EXECUTION HISTORY:
@@ -34,8 +60,7 @@ TOOL EXECUTION RESULT:
 {res}
 
 DECISION:
-The tool has retrieved the requested information above.
-Summarize or present this content to answer the user's GOAL.
+Answer the GOAL by summarizing the items in TOOL EXECUTION RESULT.
 Select type="final".
 Action:"""
 
@@ -52,5 +77,5 @@ CURRENT OBSERVATION:
 
 DECISION:
 For conversational greetings (such as 'hi', 'hello'), select type="final".
-For tasks (creating, writing, or inspecting files, or running commands), select type="tool".
+For all queries and tasks (checking path, listing files, reading, creating), select type="tool".
 Action:"""

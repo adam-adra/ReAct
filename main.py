@@ -15,6 +15,7 @@ from agent.ui import set_output_sink
 from llm.qwen import Qwen
 from tools.bash import ExecuteBash
 from tools.file_creation import CreateFile
+from tools.file_reading import ReadFile
 from tools.registry import ToolRegistry
 from tools.sandbox import LocalSandbox
 
@@ -74,7 +75,7 @@ class ReActApp(App[None]):
 
     def compose(self) -> ComposeResult:
         yield Static(
-            f"ReAct | Model: {self.model_basename} | Tools: [execute_bash, create_file]",
+            f"ReAct | Model: {self.model_basename} | Tools: [execute_bash, read_file, create_file]",
             id="header-bar",
         )
         yield RichLog(id="chat-log", markup=True, wrap=True)
@@ -137,6 +138,7 @@ def main() -> None:
     model = Qwen(model_path)
     registry = ToolRegistry()
     registry.register(ExecuteBash(sandbox=sandbox))
+    registry.register(ReadFile(sandbox=sandbox))
     registry.register(CreateFile(sandbox=sandbox))
 
     environment = Environment(registry)

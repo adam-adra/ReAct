@@ -1,11 +1,16 @@
-from typing import Any
+from pathlib import Path
+from typing import Any, Optional
 from typing_extensions import override
 
 from tools.base import Tool
 from tools.models import ReadFileArguments
+from tools.sandbox import LocalSandbox
 
 
 class ReadFile(Tool):
+    def __init__(self, sandbox: Optional[LocalSandbox] = None) -> None:
+        self.sandbox = sandbox
+
     @property
     @override
     def name(self) -> str:
@@ -14,7 +19,7 @@ class ReadFile(Tool):
     @property
     @override
     def description(self) -> str:
-        return "Read the text content of an existing file in the working directory"
+        return "Read the text content of a specific file by name (e.g. 'main.py' or 'README.md')"
 
     @property
     @override
@@ -24,7 +29,7 @@ class ReadFile(Tool):
             "properties": {
                 "file": {
                     "type": "string",
-                    "description": "The name or path of the file to read",
+                    "description": "The name or path of the file to read (e.g. 'main.py')",
                 },
             },
             "required": ["file"],
@@ -38,14 +43,22 @@ class ReadFile(Tool):
     def execute(self, **kwargs: Any) -> Any:
         validate = self.argument_model(**kwargs)
         try:
-            with open(validate.file, "r", encoding="utf-8") as f:
-                content = f.read(2000)
+            target = Path(validate.file)
+            if self.sandbox is not None:
+                if not target.is_absolute():
+                    target = self.sandbox.cwd / target
+                else:
+                    rel = str(validate.file).lstrip("/")
+                    if (self.sandbox.cwd / rel).exists():
+                        target = self.sandbox.cwd / rel
+
+            if not target.exists():
+                return f"Error: File '{validate.file}' does not exist."
+
+            with open(target, "r", encoding="utf-8", errors="replace") as f:
+                content = f.read(1500)
                 if f.read(1):
-                    return content + "\n[Warning: File content truncated at 2,000 characters]"
+                    return content + "\n... [truncated at 1500 characters]"
                 return content
-        except FileNotFoundError:
-            return f"Error: File '{validate.file}' does not exist."
-        except UnicodeDecodeError:
-            return f"Error: File '{validate.file}' could not be decoded as UTF-8 text."
         except Exception as e:
             return f"Error while reading file: {e}"

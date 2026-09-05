@@ -23,6 +23,7 @@ class Agent:
         self.session = session or Session()
 
     def run(self, goal: str, max_steps: int = 10) -> dict[str, Any]:
+        self.environment.state = {"task_completed": False, "last_result": None}
         observation = self.environment.observe()
 
         self.session.add_event(UserGoalEvent(goal=goal))

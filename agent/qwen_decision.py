@@ -3,7 +3,7 @@ import json
 from agent.action import FinalAction, ToolAction
 from agent.action_schema import build_action_schema
 from agent.decision import DecisionMaker
-from agent.prompt import SYSTEM_PROMPT, build_user_prompt
+from agent.prompt import SYSTEM_PROMPT, build_user_prompt, is_greeting
 
 
 class QwenDecisionMaker(DecisionMaker):
@@ -13,7 +13,19 @@ class QwenDecisionMaker(DecisionMaker):
     def decide(self, goal, observation, tools, history=None):
         user_prompt = build_user_prompt(goal, observation, tools, history=history)
 
-        action_schema = build_action_schema(tools)
+        if is_greeting(goal):
+            action_schema = build_action_schema(
+                tools, include_tools=False, include_final=True
+            )
+        elif not history:
+            action_schema = build_action_schema(
+                tools, include_tools=True, include_final=False
+            )
+        else:
+            action_schema = build_action_schema(
+                tools, include_tools=False, include_final=True
+            )
+
         response = self.model.generate(
             system_prompt=SYSTEM_PROMPT,
             user_prompt=user_prompt,

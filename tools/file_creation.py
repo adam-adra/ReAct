@@ -5,6 +5,7 @@ from typing_extensions import override
 from tools.base import Tool
 from tools.models import CreateFileArguments
 from tools.sandbox import LocalSandbox
+from tools.security import SecurityGuard
 
 
 class CreateFile(Tool):
@@ -20,8 +21,8 @@ class CreateFile(Tool):
     @override
     def description(self) -> str:
         return (
-            "Create or write a file with text content. "
-            "Always use this tool when asked to create or write files."
+            "Create or write a new file with text content (e.g. 'hello.py' or 'demo.py'). "
+            "Never overwrite 'main.py'."
         )
 
     @property
@@ -30,7 +31,13 @@ class CreateFile(Tool):
         return {
             "type": "object",
             "properties": {
-                "file": {"type": "string", "description": "The name or path of the file to create"},
+                "file": {
+                    "type": "string",
+                    "description": (
+                        "The name of the new file to create (e.g. 'demo.py' or 'hello.py'). "
+                        "Never overwrite 'main.py'."
+                    ),
+                },
                 "content": {
                     "type": "string",
                     "description": "The text content to write inside the file",
@@ -50,6 +57,13 @@ class CreateFile(Tool):
             target = Path(validate.file)
             if self.sandbox is not None and not target.is_absolute():
                 target = self.sandbox.cwd / target
+
+            if SecurityGuard.is_protected_file(str(target)):
+                return (
+                    f"Security Error: Overwriting protected project file '{validate.file}' "
+                    f"is forbidden. Please specify a new filename such as 'demo.py' or 'hello.py'."
+                )
+
             target.parent.mkdir(parents=True, exist_ok=True)
             with open(target, "w", encoding="utf-8") as f:
                 f.write(validate.content)

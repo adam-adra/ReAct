@@ -41,3 +41,23 @@ class SecurityGuard:
             if pattern.search(cmd):
                 return False, reason
         return True, None
+
+    PROTECTED_FILES: set[str] = {
+        "main.py",
+        "Makefile",
+        "pyproject.toml",
+        "uv.lock",
+        "_bootstrap.py",
+        "pyrightconfig.json",
+        "README.md",
+    }
+
+    @classmethod
+    def is_protected_file(cls, filename: str) -> bool:
+        from pathlib import Path
+        p = Path(filename)
+        if p.name in cls.PROTECTED_FILES:
+            return True
+        if any(part in {"agent", "tools", "llm"} for part in p.parts):
+            return True
+        return False

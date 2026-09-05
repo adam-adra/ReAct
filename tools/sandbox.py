@@ -33,9 +33,25 @@ class LocalSandbox:
                         tok = rel
                         modified = True
             elif not tok.startswith("-") and not (self.cwd / tok).exists():
+                stem = Path(tok).stem
                 if (self.cwd / f"_{tok}").exists():
                     tok = f"_{tok}"
                     modified = True
+                elif (self.cwd / stem).exists():
+                    tok = stem
+                    modified = True
+                elif (self.cwd / f"_{stem}.py").exists():
+                    tok = f"_{stem}.py"
+                    modified = True
+                else:
+                    matches = [
+                        p.name
+                        for p in self.cwd.iterdir()
+                        if p.stem.lower() == stem.lower()
+                    ]
+                    if matches:
+                        tok = matches[0]
+                        modified = True
             new_tokens.append(tok)
         return " ".join(new_tokens) if modified else command
 

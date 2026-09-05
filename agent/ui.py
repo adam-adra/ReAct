@@ -30,13 +30,13 @@ class AgentUI:
         tool_str = ", ".join(f"[{t}]" for t in tool_names)
 
         banner_text = Text()
-        banner_text.append("AgentOS", style="bold white")
+        banner_text.append("ReAct", style="bold white")
         banner_text.append(" | Autonomous Coding Agent\n", style="cyan")
         banner_text.append(f"Model: {model_basename} (llama.cpp CPU)\n", style="dim")
         banner_text.append(f"Tools: {tool_str}", style="dim")
 
         if _output_sink is not None:
-            _emit(f"[bold cyan]AgentOS[/bold cyan] | Model: {model_basename} | Tools: {tool_str}\n")
+            _emit(f"[bold cyan]ReAct[/bold cyan] | Model: {model_basename} | Tools: {tool_str}\n")
         else:
             console.print(
                 Panel(
@@ -57,6 +57,9 @@ class AgentUI:
         if tool == "execute_bash":
             cmd = arguments.get("command", "")
             _emit(f"\n[bold yellow]$[/bold yellow] [bold white]{cmd}[/bold white]")
+        elif tool == "read_file":
+            filename = arguments.get("file", "")
+            _emit(f"\n[cyan]read {filename}[/cyan]")
         else:
             args_str = ", ".join(f"{k}={v}" for k, v in arguments.items())
             _emit(f"\n[cyan]run {tool}[/cyan] [white]{args_str}[/white]")
