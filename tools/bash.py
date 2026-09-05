@@ -1,12 +1,16 @@
-import subprocess
-from typing import Any
+from typing import Any, Optional
 from typing_extensions import override
 
 from tools.base import Tool
 from tools.models import BashArguments
+from tools.sandbox import LocalSandbox
+from tools.security import SecurityGuard
 
 
 class ExecuteBash(Tool):
+    def __init__(self, sandbox: Optional[LocalSandbox] = None) -> None:
+        self.sandbox = sandbox or LocalSandbox()
+
     @property
     @override
     def name(self) -> str:
@@ -15,7 +19,10 @@ class ExecuteBash(Tool):
     @property
     @override
     def description(self) -> str:
-        return "Execute a bash shell command and return its stdout, stderr, and exit code"
+        return (
+            "Execute a bash shell command (e.g. 'cat <file>' to view file contents, "
+            "'ls' to list files) and return its stdout, stderr, and exit code"
+        )
 
     @property
     @override
@@ -38,25 +45,10 @@ class ExecuteBash(Tool):
 
     def execute(self, **kwargs: Any) -> Any:
         validate = self.argument_model(**kwargs)
-        try:
-            result = subprocess.run(
-                validate.command,
-                shell=True,
-                capture_output=True,
-                text=True,
-                timeout=15,
-            )
-            if result.returncode == 0:
-                output = result.stdout.strip()
-                if not output:
-                    output = "(Command executed successfully with no output)"
-                if len(output) > 2000:
-                    return output[:2000] + "\n[Warning: Output truncated at 2000 characters]"
-                return output
-            else:
-                stderr = result.stderr.strip() or result.stdout.strip()
-                return f"Command failed (exit code {result.returncode}):\n{stderr}"
-        except subprocess.TimeoutExpired:
-            return "Error: Command timed out after 15 seconds."
-        except Exception as e:
-            return f"Error executing bash command: {e}"
+
+        is_safe, reason = SecurityGuard.validate(validate.command)
+        if not is_safe:
+            return f"Security Violation: {reason}"
+
+        _, output = self.sandbox.execute(validate.command, timeout=15)
+        return output

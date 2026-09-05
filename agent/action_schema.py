@@ -20,7 +20,6 @@ def build_action_schema(tools: list[dict]) -> dict:
             }
         )
 
-    # Append FinalAction once outside the loop
     tool_branches.append(
         {
             "type": "object",

@@ -1,6 +1,7 @@
 import _bootstrap  # noqa: F401
 import os
 import sys
+from typing import Optional
 
 from textual import work
 from textual.app import App, ComposeResult
@@ -14,6 +15,7 @@ from agent.ui import set_output_sink
 from llm.qwen import Qwen
 from tools.bash import ExecuteBash
 from tools.registry import ToolRegistry
+from tools.sandbox import LocalSandbox
 
 
 class AgentOSApp(App[None]):
@@ -56,15 +58,22 @@ class AgentOSApp(App[None]):
     }
     """
 
-    def __init__(self, agent: Agent, environment: Environment, model_basename: str):
+    def __init__(
+        self,
+        agent: Agent,
+        environment: Environment,
+        model_basename: str,
+        sandbox: Optional[LocalSandbox] = None,
+    ):
         super().__init__()
         self.agent = agent
         self.environment = environment
         self.model_basename = model_basename
+        self.sandbox = sandbox
 
     def compose(self) -> ComposeResult:
         yield Static(
-            f"AgentOS | Model: {self.model_basename} (llama.cpp) | Tool: [execute_bash]",
+            f"AgentOS | Model: {self.model_basename} | Tool: [execute_bash]",
             id="header-bar",
         )
         yield RichLog(id="chat-log", markup=True, wrap=True)
@@ -127,9 +136,10 @@ def main() -> None:
         print(f"Error: Model file not found at {model_path}. Run 'make download-model' first.")
         sys.exit(1)
 
+    sandbox = LocalSandbox()
     model = Qwen(model_path)
     registry = ToolRegistry()
-    registry.register(ExecuteBash())
+    registry.register(ExecuteBash(sandbox=sandbox))
 
     environment = Environment(registry)
     decision_maker = QwenDecisionMaker(model)
@@ -139,6 +149,7 @@ def main() -> None:
         agent=agent,
         environment=environment,
         model_basename=os.path.basename(model_path),
+        sandbox=sandbox,
     )
     app.run()
 

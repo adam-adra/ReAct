@@ -7,8 +7,6 @@ from rich.panel import Panel
 from rich.text import Text
 
 console = Console()
-
-# Optional sink callback for GUI/TUI redirection (e.g. Textual)
 UIOutputCallback = Callable[[str], None]
 _output_sink: Optional[UIOutputCallback] = None
 

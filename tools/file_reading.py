@@ -39,9 +39,9 @@ class ReadFile(Tool):
         validate = self.argument_model(**kwargs)
         try:
             with open(validate.file, "r", encoding="utf-8") as f:
-                content = f.read(10000)
+                content = f.read(2000)
                 if f.read(1):
-                    return content + "\n[Warning: File content truncated at 10,000 characters]"
+                    return content + "\n[Warning: File content truncated at 2,000 characters]"
                 return content
         except FileNotFoundError:
             return f"Error: File '{validate.file}' does not exist."

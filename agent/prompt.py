@@ -8,9 +8,8 @@ RULES:
 1. When a task requires inspecting files or running commands, select type="tool".
 2. For greetings or conversation (such as "hi", "hello", "how are you"),
    select type="final" and reply helpfully without calling tools.
-3. When EXECUTION HISTORY is present, the action has already finished.
-   You are FORBIDDEN from calling any tool. You MUST select type="final" and
-   provide the answer to the user's goal.
+3. When tool execution results are present, use the retrieved information to answer the user's goal.
+   Select type="final".
 4. In the "thought" field, write 1 concise sentence describing your immediate step.
 5. Output only valid JSON matching the schema.
 """
@@ -30,12 +29,13 @@ def build_user_prompt(
 EXECUTION HISTORY:
 {history_lines}
 
-OBSERVATION OUTPUT:
+TOOL EXECUTION RESULT:
 {res}
 
 DECISION:
-The command has already run. Do NOT call any tool again.
-Select type="final" and answer the user's GOAL using the output above.
+The tool has retrieved the requested information above.
+Summarize or present this content to answer the user's GOAL.
+Select type="final".
 Action:"""
 
     tool_lines = [f"- {t['name']}: {t.get('description', '')}" for t in tools]
